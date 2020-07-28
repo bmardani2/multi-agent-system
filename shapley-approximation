@@ -1,0 +1,85 @@
+
+
+
+
+import numpy as np
+import sympy as sp
+from scipy.integrate import quad
+import math
+
+
+def grand(t, y, m, v):
+    
+    
+    result =np.exp(-y*((t-m)/(2*v)))
+    return result
+
+
+
+def theorem_1(a, b, y, m, v):
+    
+   
+    sol, err = quad(grand, a, b, args=(y,m,v))
+    sol = math.sqrt((2* np.pi * v)/y) * sol
+    
+    return sol
+    
+def theorem_2(a, b, n, mean, var):
+    
+    phi_i = 0
+    for x in range(1 , n):
+        coalition_contribution = theorem_1(a, b, x, mean, var)
+        phi_i = phi_i + coalition_contribution
+        
+    phi_i = phi_i / n
+    
+    return phi_i
+    
+"""
+initialization
+"""
+num_parts = 13 #number of parts in belgium parliment
+
+q = 76 #I assume to ratify any task at least we need one more than half parlimentaries (150/2)+1=76
+    
+
+#-----name of parts-------------
+parts = ["NVA", "PS", "MR", "CD_V", "OpenVLD", "PSA", "EcoloGroEn", "CDH", "VB", "Defi", "PTB", "VW", "pp"]
+
+#-----weight of any part--------
+part_weight = [31, 23, 20, 18, 14, 13, 12, 9, 3, 2, 2, 2, 1]    
+
+#----mean of  parts weight ---------
+mean = sum(part_weight)/len(part_weight)
+
+#----variance of parts weight---------
+var = np.var(part_weight)
+
+epsilon = 10**(-50)
+
+shapley_value = list()
+
+#-----------main---------------#
+for i in range(0, num_parts):
+
+    a = q - part_weight[i]
+    b = q - epsilon
+    shapley = theorem_2(a, b, num_parts, mean, var)
+    
+    shapley_value.append(shapley)
+    
+normal_shapley_value = []
+
+maximum = sum(shapley_value)
+for i in range(0, len(shapley_value)):
+        
+    temp = (shapley_value[i]*100)/maximum
+    normal_shapley_value.append(temp)
+
+    
+print(" part ", "shapley value", end="      ")  
+print("\n", "---"*10) 
+for i in range(0, len(normal_shapley_value)):
+    print("\n", parts[i], "   ", normal_shapley_value[i], end="      ")
+    
+print("\n", "---"*10)
